@@ -36,3 +36,15 @@ class Grid:
 
     def population(self):
         return sum(sum(row) for row in self.cells)
+
+    def step(self):
+        """Advance one generation using Conway's B3/S23 rules."""
+        new_cells = [[False] * self.width for _ in range(self.height)]
+        for y in range(self.height):
+            for x in range(self.width):
+                n = self.live_neighbors(x, y)
+                if self.cells[y][x]:
+                    new_cells[y][x] = n in (2, 3)
+                else:
+                    new_cells[y][x] = n == 3
+        self.cells = new_cells
