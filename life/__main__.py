@@ -40,6 +40,10 @@ def build_parser():
         "-g", "--generations", type=int, default=0,
         help="stop after N generations (default: 0 = run forever)",
     )
+    parser.add_argument(
+        "--no-wrap", action="store_true",
+        help="treat edges as dead instead of wrapping around",
+    )
     return parser
 
 
@@ -80,7 +84,11 @@ def main(argv=None):
         print(f"available: {', '.join(PRESETS)}", file=sys.stderr)
         return 2
 
-    grid = Grid(args.width, args.height)
+    try:
+        grid = Grid(args.width, args.height, wrap=not args.no_wrap)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 2
     try:
         apply_preset(grid, args.preset)
     except ValueError as e:
