@@ -2,10 +2,18 @@
 
 import argparse
 import sys
+import time
 
 from .grid import Grid
 from .presets import PRESETS, apply_preset
-from .render import render, status_line
+from .render import (
+    CLEAR_SCREEN,
+    CURSOR_HOME,
+    HIDE_CURSOR,
+    SHOW_CURSOR,
+    render,
+    status_line,
+)
 
 
 def build_parser():
@@ -24,7 +32,39 @@ def build_parser():
     parser.add_argument(
         "-l", "--list", action="store_true", help="list available presets"
     )
+    parser.add_argument(
+        "-d", "--delay", type=float, default=0.1,
+        help="seconds between generations (default: 0.1)",
+    )
+    parser.add_argument(
+        "-g", "--generations", type=int, default=0,
+        help="stop after N generations (default: 0 = run forever)",
+    )
     return parser
+
+
+def run(grid, name, delay, generations, out=sys.stdout):
+    """Animate the grid in place until generations reached or Ctrl+C."""
+    out.write(HIDE_CURSOR + CLEAR_SCREEN)
+    generation = 0
+    try:
+        while True:
+            frame = render(grid) + "\n" + status_line(
+                name, generation, grid.population()
+            )
+            out.write(CURSOR_HOME + frame + "\n")
+            out.flush()
+            if generations and generation >= generations:
+                break
+            time.sleep(delay)
+            grid.step()
+            generation += 1
+    except KeyboardInterrupt:
+        pass
+    finally:
+        out.write(SHOW_CURSOR)
+        out.flush()
+    return generation
 
 
 def main(argv=None):
@@ -47,8 +87,7 @@ def main(argv=None):
         print(e, file=sys.stderr)
         return 2
 
-    print(render(grid))
-    print(status_line(args.preset, 0, grid.population()))
+    run(grid, args.preset, args.delay, args.generations)
     return 0
 
 
