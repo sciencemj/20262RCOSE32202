@@ -44,16 +44,21 @@ def build_parser():
         "--no-wrap", action="store_true",
         help="treat edges as dead instead of wrapping around",
     )
+    parser.add_argument(
+        "--ascii", action="store_true",
+        help="draw cells with '#' instead of block characters",
+    )
     return parser
 
 
-def run(grid, name, delay, generations, out=sys.stdout):
+def run(grid, name, delay, generations, out=sys.stdout, ascii_mode=False):
     """Animate the grid in place until generations reached or Ctrl+C."""
     out.write(HIDE_CURSOR + CLEAR_SCREEN)
     generation = 0
     try:
         while True:
-            frame = render(grid) + "\n" + status_line(
+            cells = render(grid, alive="##") if ascii_mode else render(grid)
+            frame = cells + "\n" + status_line(
                 name, generation, grid.population()
             )
             out.write(CURSOR_HOME + frame + "\n")
@@ -95,7 +100,7 @@ def main(argv=None):
         print(e, file=sys.stderr)
         return 2
 
-    run(grid, args.preset, args.delay, args.generations)
+    run(grid, args.preset, args.delay, args.generations, ascii_mode=args.ascii)
     return 0
 
 
